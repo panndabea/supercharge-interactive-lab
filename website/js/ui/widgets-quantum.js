@@ -49,14 +49,19 @@ function quboWidget(slot, w, ctx) {
   let bits = [];
   function upd() {
     const p = buildProblem(ctx.instance, cfg);
-    const q = buildQubo(p);
+    let q;
+    try { q = buildQubo(p); } catch (e) { out.innerHTML = `<div class="card warn">QUBO nicht aufgebaut: ${e.message}. Verkleinere Radius oder Kandidatenzahl.</div>`; return; }
     if (bits.length !== q.n) bits = new Array(q.n).fill(0);
     const E = energy(q, bits), d = decode(p, q, bits), cov = evaluate(p, d.stations).coveredWeight;
-    const Q = Array.from({ length: q.n }, () => new Array(q.n).fill(0));
-    q.linear.forEach((v, i) => { Q[i][i] = v; });
-    for (const [a, b, v] of quadList(q)) Q[a][b] = v;
-    const maxAbs = Math.max(1e-9, ...Q.flat().map(Math.abs));
-    const heat = q.n <= 24 ? `<div class="heat" style="grid-template-columns:repeat(${q.n + 1},34px)"><div class="h"></div>${q.labels.map((l) => `<div class="h">${l.name}</div>`).join('')}${Q.map((row, i) => `<div class="h">${q.labels[i].name}</div>` + row.map((v, j) => `<div title="Q[${q.labels[i].name},${q.labels[j].name}] = ${v}" style="background:${v === 0 ? 'var(--panel2)' : v < 0 ? `rgba(52,211,153,${0.15 + 0.85 * Math.abs(v) / maxAbs})` : `rgba(248,113,113,${0.15 + 0.85 * Math.abs(v) / maxAbs})`}">${v === 0 || j < i ? '' : fmt(v, 1)}</div>`).join('')).join('')}</div>` : '<p>Matrix zu groß für die Anzeige.</p>';
+    const show = q.n <= 24;
+    const Q = show ? Array.from({ length: q.n }, () => new Array(q.n).fill(0)) : [];
+    let maxAbs = 1e-9;
+    if (show) {
+      q.linear.forEach((v, i) => { Q[i][i] = v; });
+      for (const [a, b, v] of quadList(q)) Q[a][b] = v;
+      for (const row of Q) for (const v of row) maxAbs = Math.max(maxAbs, Math.abs(v));
+    }
+    const heat = show ? `<div class="heat" style="grid-template-columns:repeat(${q.n + 1},34px)"><div class="h"></div>${q.labels.map((l) => `<div class="h">${l.name}</div>`).join('')}${Q.map((row, i) => `<div class="h">${q.labels[i].name}</div>` + row.map((v, j) => `<div title="Q[${q.labels[i].name},${q.labels[j].name}] = ${v}" style="background:${v === 0 ? 'var(--panel2)' : v < 0 ? `rgba(52,211,153,${0.15 + 0.85 * Math.abs(v) / maxAbs})` : `rgba(248,113,113,${0.15 + 0.85 * Math.abs(v) / maxAbs})`}">${v === 0 || j < i ? '' : fmt(v, 1)}</div>`).join('')).join('')}</div>` : '<p>Matrix zu groß für die Anzeige.</p>';
     out.innerHTML = statsHtml([[q.n, 'Variablen = Qubits'], [q.N, 'Stationen x'], [q.nSlack, `Schlupf (Koeff. ${q.slack.join(', ') || '–'})`], [q.nAux, 'Hilfsvariablen z'], [fmt(q.lambda, 2), 'λ Budget-Strafe'], [fmt(q.M, 2), 'M Rosenberg-Strafe'], [fmt(q.offset, 2), 'Konstante']])
       + '<h3>Variablen umschalten</h3>';
     out.appendChild(bitButtons(q, bits, (k) => { bits[k] ^= 1; upd(); }));
@@ -98,7 +103,7 @@ function isingWidget(slot, w, ctx) {
     out.innerHTML = '';
     out.appendChild(bitButtons(q, bits, (k) => { bits[k] ^= 1; upd(); }));
     out.insertAdjacentHTML('beforeend', `<p class="mono">z = (${z.map((v) => (v > 0 ? '+1' : '−1')).join(', ')})</p>` + statsHtml([[fmt(energy(q, bits), 6), 'E_QUBO(x)'], [fmt(Ei, 6), 'E_Ising(z)'], [fmt(Math.abs(Ei - energy(q, bits)), 12), '|Differenz|'], [is.J.length, 'Kopplungen J'], [fmt(is.constant, 3), 'Konstante c']])
-      + `<details><summary>Felder h und Kopplungen J</summary><p class="mono">${is.h.map((v, k) => `h(${q.labels[k].name}) = ${fmt(v, 3)}`).join(' · ')}</p><p class="mono">${is.J.map(([a, b, J]) => `J(${q.labels[a].name},${q.labels[b].name}) = ${fmt(J, 3)}`).join(' · ')}</p></details>`);
+      + `<details><summary>Felder h und Kopplungen J</summary><p class="mono">${Array.from(is.h, (v, k) => `h(${q.labels[k].name}) = ${fmt(v, 3)}`).join(' · ')}</p><p class="mono">${is.J.map(([a, b, J]) => `J(${q.labels[a].name},${q.labels[b].name}) = ${fmt(J, 3)}`).join(' · ')}</p></details>`);
   };
   upd();
 }
