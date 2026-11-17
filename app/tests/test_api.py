@@ -38,3 +38,12 @@ def test_qaoa_default():
     assert not r["skipped"] and r["qubits"] == 10
     assert len(r["stations"]) <= 3 and r["coveredWeight"] <= 21
     assert len(r["zoneHits"]) == 80
+
+
+def test_oversized_qubo_is_skipped_not_expanded():
+    cfg = {"candidateCount": 24, "radiusM": 3000, "budget": 3}
+    prob = client.post("/api/problem", json=cfg).json()
+    assert prob["complexity"]["quboVariables"] is None and "zu groß" in prob["complexity"]["quboError"]
+    r = client.post("/api/solve/qaoa", json=cfg).json()
+    assert r["skipped"] is True and "zu groß" in r["reason"]
+    assert client.post("/api/solve/classical", json=cfg).json()["greedy"]["stations"]

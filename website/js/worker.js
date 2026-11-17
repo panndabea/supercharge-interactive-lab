@@ -17,9 +17,12 @@ self.onmessage = (ev) => {
       result = { greedy: greedy(p), localSearch: localSearch(p), annealing: simulatedAnnealing(p, { seed: options.seed ?? 7 }), branchAndBound: branchAndBound(p) };
       try { result.exact = bruteForce(p, { maxSubsets: MAX_SUBSETS }); } catch (e) { result.exact = { skipped: true, reason: e.message }; }
     } else if (task === 'qaoa') {
-      const q = buildQubo(p);
-      result = solveQaoa(p, q, options);
-      if (!result.skipped) delete result.runs;
+      let q = null;
+      try { q = buildQubo(p); } catch (e) { result = { method: 'qaoa', exact: false, skipped: true, reason: e.message }; }
+      if (q) {
+        result = solveQaoa(p, q, options);
+        if (!result.skipped) delete result.runs;
+      }
     } else if (task === 'validate') {
       const q = buildQubo(p, options);
       result = q.n <= 20 ? validateQubo(p, q, (s) => evaluate(p, s).coveredWeight) : { skipped: true, reason: `${q.n} Variablen > 20` };

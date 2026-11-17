@@ -8,6 +8,11 @@ from itertools import combinations
 from pathlib import Path
 
 EARTH_RADIUS_M = 6371008.8
+MAX_SIGNATURE = 14  # |C_j| above this: inclusion-exclusion has > 16k terms
+
+
+class QuboTooLarge(ValueError):
+    pass
 EPS = 1e-9
 
 WEIGHT_HUBS = [(40.758, -73.9855), (40.7527, -73.9772), (40.757, -73.9905)]
@@ -218,6 +223,8 @@ def build_qubo(p: Problem, penalty_scale=1.0, budget_penalty=None, aux_penalty=N
         groups[tuple(C)] = groups.get(tuple(C), 0.0) + p.weights[j]
     poly: dict = {}
     for C, wt in groups.items():
+        if len(C) > MAX_SIGNATURE:
+            raise QuboTooLarge(f"Zone von {len(C)} Kandidaten abgedeckt – Inklusion-Exklusion zu groß (Limit {MAX_SIGNATURE})")
         for r in range(1, len(C) + 1):
             for sub in combinations(C, r):
                 _add(poly, sub, -wt if r % 2 else wt)

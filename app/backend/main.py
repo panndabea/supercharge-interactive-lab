@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from supercharge.core import brute_force, build_qubo, evaluate, greedy, haversine, problem_from_instance
+from supercharge.core import QuboTooLarge, brute_force, build_qubo, evaluate, greedy, haversine, problem_from_instance
 from supercharge.qaoa import solve_qaoa
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -88,14 +88,19 @@ def area():
 def problem(cfg: Config):
     p, active, zones = make_problem(cfg)
     n_feasible = sum(math.comb(p.N, k) for k in range(min(p.budget, p.N) + 1))
-    q = build_qubo(p) if p.N else None
+    q, qubo_error = None, None
+    if p.N:
+        try:
+            q = build_qubo(p)
+        except QuboTooLarge as e:
+            qubo_error = str(e)
     return {
         "candidates": active, "zoneIds": [z["id"] for z in zones], "weights": p.weights,
         "cover": p.cover, "N": p.N, "Z": len(zones), "budget": p.budget, "radiusM": p.radius,
         "complexity": {"allSubsets": 2 ** p.N, "feasibleSubsets": n_feasible,
-                       "quboVariables": q.n if q else 0, "slack": q.n_slack if q else 0,
-                       "aux": len(q.aux) if q else 0,
-                       "statevectorBytes": 16 * 2 ** q.n if q else 0,
+                       "quboVariables": q.n if q else None, "slack": q.n_slack if q else None,
+                       "aux": len(q.aux) if q else None,
+                       "statevectorBytes": 16 * 2 ** q.n if q else None, "quboError": qubo_error,
                        "maxQubits": MAX_QUBITS, "maxSubsets": MAX_SUBSETS},
         "penalties": {"lambda": q.lam, "M": q.M} if q else None,
     }
@@ -125,7 +130,10 @@ def solve_quantum(req: QaoaRequest):
     p, _, _ = make_problem(req)
     if p.N == 0:
         raise HTTPException(400, "Keine aktiven Kandidaten")
-    q = build_qubo(p)
+    try:
+        q = build_qubo(p)
+    except QuboTooLarge as e:
+        return {"method": "qaoa", "exact": False, "skipped": True, "reason": str(e)}
     r = solve_qaoa(p, q, layers=req.layers, shots=req.shots, seed=req.seed, restarts=req.restarts,
                    maxiter=req.maxiter, max_qubits=MAX_QUBITS)
     if r["skipped"]:

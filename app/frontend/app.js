@@ -69,6 +69,10 @@ function draw(k, prob, mine, other) {
 
 function renderComplexity(p) {
   const c = p.complexity;
+  if (c.quboVariables === null) {
+    $('complexity').innerHTML = `<div>Aktive Kandidaten N = <b>${p.N}</b>, Zonen = <b>${p.Z}</b></div><div>Zulässig: <b>${fmt(c.feasibleSubsets)}</b> (Limit ${fmt(c.maxSubsets)})</div><div>QUBO nicht aufgebaut: ${c.quboError ?? 'keine Kandidaten'}</div>`;
+    return;
+  }
   const mib = c.statevectorBytes / 2 ** 20;
   $('complexity').innerHTML = `
     <div>Aktive Kandidaten N = <b>${p.N}</b>, Zonen = <b>${p.Z}</b></div>
