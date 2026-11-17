@@ -1,0 +1,14 @@
+services:
+  lab:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-python:3.12-slim}
+    image: supercharge-interactive-lab:latest
+    ports:
+      - "8000:8000"
+    environment:
+      SUPERCHARGE_MAX_QUBITS: "18"
+      SUPERCHARGE_MAX_SUBSETS: "300000"
+    restart: unless-stopped
