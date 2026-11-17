@@ -18,7 +18,7 @@ Ein Produkt x_a x_b wird durch eine Hilfsvariable z ersetzt; die Strafe
 
     M · (x_a x_b − 2 x_a z − 2 x_b z + 3 z)
 
-ist 0 genau dann, wenn z = x_a x_b, sonst ≥ M. Paare werden greedy so gewählt, dass sie in möglichst vielen Monomen vom Grad ≥ 3 vorkommen. M = 1 + Summe der Beträge aller Koeffizienten, in denen eine Hilfsvariable vorkommt (Default `penaltyScale = 1`).
+ist 0 genau dann, wenn z = x_a x_b, sonst ≥ M. Paare werden greedy so gewählt, dass sie in möglichst vielen Monomen vom Grad ≥ 3 vorkommen. M = 1 + Summe der Beträge aller Inklusion–Exklusion-Koeffizienten vom Grad ≥ 3 (Default `penaltyScale = 1`).
 
 ## 4. Budget
 
