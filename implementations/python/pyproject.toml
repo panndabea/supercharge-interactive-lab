@@ -1,0 +1,16 @@
+[project]
+name = "supercharge"
+version = "1.0.0"
+description = "Maximum coverage, exact QUBO and QAOA reference implementation (Qiskit)"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+qiskit = ["qiskit==2.2.6", "qiskit-aer==0.17.2", "scipy>=1.11"]
+test = ["pytest>=8"]
+
+[tool.setuptools]
+packages = ["supercharge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
