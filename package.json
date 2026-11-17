@@ -1,0 +1,16 @@
+{
+  "name": "supercharge-interactive-lab",
+  "private": true,
+  "type": "module",
+  "description": "Maximum-Coverage-Lernlabor: exakte Optimierung, QUBO und QAOA für EV-Ladestationen",
+  "scripts": {
+    "test": "node --test tests/js/*.test.mjs",
+    "fixtures": "node tools/gen-fixtures.mjs",
+    "check": "node tools/gen-fixtures.mjs && git diff --exit-code -- fixtures",
+    "serve": "python3 -m http.server 8080 --directory website",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
+  }
+}

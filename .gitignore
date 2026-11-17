@@ -1,0 +1,11 @@
+.osm-cache/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+implementations/go/bin/
+implementations/rust/target/
+implementations/cpp/build/
+test-results/
+playwright-report/
+.pytest_cache/

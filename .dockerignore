@@ -1,0 +1,9 @@
+.git
+.osm-cache
+node_modules
+implementations/rust/target
+implementations/go/bin
+implementations/cpp/build
+**/__pycache__
+test-results
+playwright-report

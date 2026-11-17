@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supercharge Lab – Ladestationen optimieren</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Supercharge Lab</h1>
+      <p>Maximale Abdeckung von Demand-Zonen in Midtown Manhattan – exakte Suche vs. QAOA (Qiskit, lokale Simulation)</p>
+    </div>
+    <span id="status" class="status" role="status" aria-live="polite">Lade Referenzinstanz …</span>
+  </header>
+  <main>
+    <section class="panel controls" aria-labelledby="cfg-h">
+      <h2 id="cfg-h">Konfiguration</h2>
+      <label>Kandidaten im Pool <output id="o-cand"></output>
+        <input id="cand" type="range" min="2" max="24" step="1"></label>
+      <label>Budget B (max. Stationen) <output id="o-budget"></output>
+        <input id="budget" type="range" min="1" max="8" step="1"></label>
+      <label>Radius r <output id="o-radius"></output>
+        <input id="radius" type="range" min="100" max="700" step="25"></label>
+      <label>Gewichte
+        <select id="weights">
+          <option value="uniform">Uniform (alle Zonen = 1)</option>
+          <option value="synthetic-hubs">Synthetisch: Verkehrsknoten ×3</option>
+        </select></label>
+      <label class="check"><input id="access" type="checkbox" checked> Unzugängliche Flächen ausschließen</label>
+      <fieldset>
+        <legend>QAOA</legend>
+        <label>Schichten p <output id="o-layers"></output><input id="layers" type="range" min="1" max="4" value="2"></label>
+        <label>Shots <input id="shots" type="number" min="16" max="20000" value="1024"></label>
+        <label>Seed <input id="seed" type="number" min="0" value="7"></label>
+        <label>Neustarts <input id="restarts" type="number" min="1" max="8" value="3"></label>
+      </fieldset>
+      <button id="run" type="button">Beide Solver ausführen</button>
+      <div id="complexity" class="complexity"></div>
+    </section>
+    <section class="maps">
+      <figure class="panel">
+        <figcaption><span class="dot exact"></span> Klassisch exakt (Brute Force)</figcaption>
+        <div id="map-a" class="map" role="img" aria-label="Karte mit klassischer Lösung"></div>
+      </figure>
+      <figure class="panel">
+        <figcaption><span class="dot qaoa"></span> QAOA (bestes zulässiges Sample)</figcaption>
+        <div id="map-b" class="map" role="img" aria-label="Karte mit QAOA-Lösung"></div>
+      </figure>
+    </section>
+    <section class="panel">
+      <h2>Vergleich</h2>
+      <div class="legend">
+        <span><i class="sw both"></i> von beiden abgedeckt</span>
+        <span><i class="sw onlyA"></i> nur klassisch</span>
+        <span><i class="sw onlyB"></i> nur QAOA</span>
+        <span><i class="sw none"></i> nicht abgedeckt</span>
+        <span><i class="sw blocked"></i> unzugänglich</span>
+      </div>
+      <table id="metrics"><caption class="sr">Solver-Metriken</caption></table>
+      <p class="note">Zeiten sind auf diesem Rechner gemessen (Server-seitig). QAOA ist eine heuristische Methode: das Ergebnis kann suboptimal sein und wird unabhängig per Coverage-Prüfung bewertet – es nutzt nie das Brute-Force-Ergebnis.</p>
+    </section>
+    <section class="panel">
+      <h2>QAOA-Messverteilung (Top 16 Bitstrings)</h2>
+      <div id="hist" class="hist"></div>
+    </section>
+  </main>
+  <footer>Kartendaten © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende (ODbL). Kandidaten sind hypothetisch, Gewichte ggf. synthetisch.</footer>
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
