@@ -1,0 +1,88 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run check
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r app/requirements.txt pytest httpx
+      - run: python -m pytest -q implementations/python/tests app/tests
+
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - working-directory: implementations/go
+        run: |
+          go vet ./...
+          go test ./...
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - working-directory: implementations/rust
+        run: |
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+
+  cpp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y g++-13
+      - working-directory: implementations/cpp
+        run: make test CXX=g++-13
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up -d --build --wait
+      - run: |
+          curl -fsS http://localhost:8000/api/health
+          curl -fsS -X POST http://localhost:8000/api/solve/classical -H 'Content-Type: application/json' -d '{}' | grep -q '"stations":\[1,3,4\]'
+          curl -fsS -X POST http://localhost:8000/api/solve/qaoa -H 'Content-Type: application/json' -d '{"layers":1,"restarts":1}' | grep -q '"method":"qaoa"'
+          curl -fsS http://localhost:8000/ | grep -q 'Supercharge Lab'
+      - if: always()
+        run: docker compose logs && docker compose down

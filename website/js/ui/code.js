@@ -13,7 +13,7 @@ const TOPICS = [
 const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
 
 async function load(path) {
-  for (const p of [path, path.replace(/^src\//, '../')]) {
+  for (const p of [path]) {
     try { const r = await fetch(p); if (r.ok) return await r.text(); } catch { /* try next */ }
   }
   throw new Error(`${path} nicht gefunden`);

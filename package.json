@@ -6,11 +6,11 @@
   "scripts": {
     "test": "node --test tests/js/*.test.mjs",
     "fixtures": "node tools/gen-fixtures.mjs",
-    "check": "node tools/check-fixtures.mjs",
+    "check": "node tools/gen-fixtures.mjs && git diff --exit-code -- fixtures",
     "serve": "python3 -m http.server 8080 --directory website",
     "test:browser": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "1.49.1"
+    "@playwright/test": "^1.49.1"
   }
 }
